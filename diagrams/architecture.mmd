@@ -1,0 +1,8 @@
+flowchart LR
+    A[CLI / App / Bot] -->|OpenAI-compatible request| B[LLM Gateway]
+    B --> C[(Postgres: usage + spend)]
+    B --> D[Fast provider route]
+    B --> E[Balanced provider route]
+    B --> F[Reasoning provider route]
+    B --> G[Read-only MCP services]
+    H[Metrics / Admin UI] --> B

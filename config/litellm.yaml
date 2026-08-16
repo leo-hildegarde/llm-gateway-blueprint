@@ -1,0 +1,45 @@
+# Runnable baseline: one provider credential, three capability aliases.
+# The point is the gateway pattern, not these specific model choices. Verify
+# model availability and pricing before using the example outside a demo.
+
+model_list:
+  - model_name: fast
+    litellm_params:
+      model: openai/gpt-5-nano
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: balanced
+    litellm_params:
+      model: openai/gpt-5-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: reasoning
+    litellm_params:
+      model: openai/gpt-5.1
+      api_key: os.environ/OPENAI_API_KEY
+
+  # `auto` is intercepted by src/auto_router.py before the provider call.
+  # A real deployment can map each capability alias to a different provider.
+  - model_name: auto
+    litellm_params:
+      model: openai/gpt-5-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  store_model_in_db: true
+
+litellm_settings:
+  drop_params: true
+  callbacks:
+    - auto_router.auto_router_instance
+
+router_settings:
+  routing_strategy: simple-shuffle
+  fallbacks:
+    - reasoning: [balanced]
+    - balanced: [fast]
+
+mcp_servers:
+  spend:
+    url: http://spend-mcp:8000/mcp
