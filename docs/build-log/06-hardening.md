@@ -9,6 +9,8 @@ Use layers:
 - read-only by default
 - least-privilege tokens per integration
 - separate client credentials where attribution, revocation, or budgets matter
+- test capability discovery with the same scoped credentials real clients use; admin credentials can mask missing grants
+- enforce tool authorization at invocation time, not only when publishing the tool schema
 - explicit confirmation or force flags for destructive writes
 - allowlists for actions with external side effects
 - separate access tiers where different users need different tool surfaces
@@ -27,4 +29,4 @@ Ephemeral credentials should also stay ephemeral. A temporary Git credential hel
 
 That separation improves both security and reliability: a root-owned temporary file or a large disposable worktree should not be able to interfere with an unrelated backup/sync process.
 
-The public/private split is part of this hardening. Publishing architecture should never publish production recoverability information, exact budget thresholds, repository allowlists, notification identities, or deployment-specific control-plane endpoints.
+The public/private split is part of this hardening. Publishing architecture should never publish production recoverability information, exact budget thresholds, repository allowlists, notification identities, permission maps, tool inventories, or deployment-specific control-plane endpoints.
