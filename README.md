@@ -15,6 +15,7 @@ This repository is **not a sanitized clone** of a real deployment. It is a clean
 - application-level health checks and failure-oriented design
 - per-client budget identities and layered spend guardrails
 - human-gated patterns for agentic automation
+- resilient, permission-aware MCP capability discovery
 - a public-safe documentation pattern for infrastructure projects
 
 The runnable baseline intentionally uses one OpenAI API key to keep the first run simple. The architecture is designed so `fast`, `balanced`, and `reasoning` can later map to different providers without changing clients.
@@ -45,7 +46,7 @@ The public example intentionally leaves out production network topology, persona
 | `src/auto_router.py` | Task-aware `auto` routing callback |
 | `mcp/spend/` | Small read-only MCP example |
 | `tests/` | Unit/config tests for routing, safety assumptions, and MCP helpers |
-| `docs/build-log/` | Staged engineering story, including reliability, budget and automation guardrails |
+| `docs/build-log/` | Staged engineering story, including reliability, budget, automation, and capability-discovery guardrails |
 | `docs/security-boundary.md` | What belongs in the public twin and what never does |
 | `scripts/public-safety-check.sh` | Pre-publication leak checks |
 
@@ -116,14 +117,15 @@ It deliberately does **not** return prompts, responses, API keys, raw request me
 
 For tutorial simplicity it uses the same Postgres credential as LiteLLM. A production deployment should create a separate database role with only the `SELECT` privileges the tool requires.
 
-## Cost and agent guardrails
+## Control-plane guardrails
 
 The later build notes extend the control-plane idea beyond routing:
 
-- `docs/build-log/07-budget-guardrails.md` describes per-client credentials, soft/hard budget boundaries, and early detection of loops, spend velocity, and sustained fan-out.
+- `docs/build-log/07-budget-guardrails.md` describes per-client credentials, soft/hard budget boundaries, early derail detection, and observability of the guardrail itself.
 - `docs/build-log/08-agent-automation.md` describes human-gated coding-agent workflows with anti-recursion, exact approvals, idempotent state transitions, correct ref targeting, and hard execution limits.
+- `docs/build-log/09-capability-discovery.md` describes permission-aware MCP discovery, bounded startup retries, last-known-good caching, periodic refresh, and reconnect ownership.
 
-These chapters are intentionally architecture-first. They do not publish production thresholds, client identities, repository allowlists, notification channels, or operational endpoints.
+These chapters are intentionally architecture-first. They do not publish production thresholds, client identities, repository allowlists, notification channels, tool inventories, permission mappings, or operational endpoints.
 
 ## Validate before publishing
 
@@ -154,8 +156,9 @@ The repository is organized so the implementation can be explained as a sequence
 4. **Tools** — expose safe read-only operational data over MCP.
 5. **Reliability** — health checks, timeouts, graceful fallbacks, and failure visibility.
 6. **Hardening** — least privilege, confirmation gates for writes, secret hygiene, and public/private separation.
-7. **Budget guardrails** — isolate client spend, alert early, and contain runaway workloads before the account-level blast radius grows.
+7. **Budget guardrails** — isolate client spend, alert early, contain runaway workloads, and monitor the protection loop itself.
 8. **Agent automation** — automate review/fix loops while bounding recursion, authorization, retries, spend, and side effects.
+9. **Capability discovery** — make tool availability resilient to permission scoping, startup races, stale catalogs, and transport lifecycle failures.
 
 See `docs/build-log/` for the staged notes.
 
