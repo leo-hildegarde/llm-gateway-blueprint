@@ -59,6 +59,25 @@ Important properties:
 - manually unblocked clients can re-arm cleanly
 - the detector operates on aggregate metadata rather than prompt/response bodies
 
+## Make the guardrail observable too
+
+A protection loop that silently stops running is only a policy on paper. Treat the watchdog itself as something that needs health and outcome signals.
+
+Useful operational signals include:
+
+- whether the detector is up
+- age and success/failure of the last completed cycle
+- cumulative cycle errors
+- pending human decisions
+- currently contained client identities
+- recent alerts grouped by signal type
+
+Persist a small alert history with outcomes such as approved containment, rejected containment, expiry, or failed enforcement. That makes it possible to answer not only “did the detector fire?” but also “what happened next?”.
+
+Telemetry should be **best effort**. If writing an alert-history row or exporting a metric fails, the protection path should still evaluate traffic and raise the decision. Observability must not become a dependency that disables enforcement.
+
+Finally, keep the monitoring view and detector on one source of truth. A chart showing “percent of trip threshold” must use the same effective thresholds as the watchdog. Duplicating limits in dashboard configuration creates policy drift and misleading status.
+
 This is a good example of the gateway becoming a control plane: routing decides **where** work runs, while budget policy decides **how much damage a broken workload is allowed to cause**.
 
 The public blueprint intentionally leaves out production thresholds, client names, notification channels, account structure, and operational endpoints. Those values are deployment policy, not architecture.
