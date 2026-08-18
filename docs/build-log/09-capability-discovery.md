@@ -60,6 +60,21 @@ Useful safeguards include:
 
 Last-known-good caching is an **availability mechanism, not authorization**. The server must still validate the client's current permissions on every actual tool invocation, and refresh must eventually converge after deliberate revocation.
 
+## Observe each capability independently
+
+A large aggregate tool count is useful as a smoke signal, but it is not enough to prove a specific integration is healthy.
+
+A better operational model gives important capabilities their own signals:
+
+- discovery visibility for the scoped client that should see the capability
+- exporter/upstream freshness where the integration has an independent telemetry path
+- success/failure counters for refreshes or synchronization work
+- alerting on stale data, not only complete process failure
+
+This prevents a healthy-looking aggregate from hiding one broken integration. It also keeps capability health separate from authorization: "the server is healthy," "this client may see it," and "the data is fresh" are three different questions.
+
+Where practical, keep telemetry narrower and less privileged than the tool surface. Monitoring should not need write-capable API credentials simply because the operational MCP does.
+
 ## Reconnect where the transport is owned
 
 Some client transports or async sessions are owned by a particular task or event-loop context. A periodic health job should not blindly tear down and recreate that transport from an unrelated task.
