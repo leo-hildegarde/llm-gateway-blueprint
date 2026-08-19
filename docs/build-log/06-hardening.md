@@ -29,6 +29,8 @@ For example, a delete operation can require the caller to repeat a canonical res
 
 The confirmation layer supplements authorization; it does not replace server-side permission checks.
 
+For newly introduced write surfaces, a temporary **test-resource lock** can reduce live verification risk further: production-shaped code runs against a specifically designated test object until the integration is proven. The lock should be enforced in code, not only by prompt convention, and tests should prove that rejected writes fail before any upstream side effect occurs.
+
 Agentic automation needs additional controls because a small control-flow mistake can repeat side effects very quickly:
 
 - use exact, unambiguous approval semantics
@@ -38,9 +40,23 @@ Agentic automation needs additional controls because a small control-flow mistak
 - prevent automation from recursively reacting to its own output
 - never auto-merge a code-changing workflow just because the fixer completed
 
-Ephemeral credentials should also stay ephemeral. A temporary Git credential helper, token file, or generated worktree should live in process/container temporary storage rather than a persistent state directory. Persistent or backup-synced directories should contain durable state, not regenerable clones or short-lived credential artifacts.
+Ephemeral credentials should also stay ephemeral. A temporary Git credential helper, token file, generated session, or disposable worktree should live outside source control and outside persistent/synced state unless persistence is intentional and protected.
 
 That separation improves both security and reliability: a root-owned temporary file or a large disposable worktree should not be able to interfere with an unrelated backup/sync process.
+
+## Removing a secret from HEAD does not remove the leak
+
+Moving a sensitive value from a tracked file into an environment/secret store is necessary, but it does not make a previously committed value secret again.
+
+If a credential, recovery secret, token, password, or other authentication material was committed:
+
+- treat it as exposed even after the current branch no longer contains it;
+- rotate or invalidate it using the upstream system's supported mechanism;
+- update dependent clients deliberately rather than assuming a config edit performs rotation;
+- prefer fail-fast configuration (`required` environment variables) so a missing secret cannot silently fall back to an unsafe literal/default;
+- avoid history rewriting as a substitute for rotation. History cleanup can reduce casual exposure, but it cannot revoke copies that already exist.
+
+This distinction also applies to persisted credentials: changing a client-side password variable does not necessarily rotate the credential stored by the backing service. Understand which side owns credential state before changing it.
 
 ## Structured artifacts are data, too
 

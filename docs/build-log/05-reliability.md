@@ -39,6 +39,30 @@ Treat freshness as a first-class health dimension:
 
 Last-known-good values can still be useful for continuity, but they must be labeled as stale rather than masquerading as current truth.
 
+### Zero, no data, and unknown are different states
+
+Dashboards and digests should not collapse these into the same message:
+
+- **zero** means the system successfully observed the interval and the value was zero;
+- **no data** means the query returned nothing;
+- **unknown** means the collector has not completed a trustworthy refresh, or the source is stale/unhealthy.
+
+A friendly "nothing happened" message is only valid when freshness/health proves the observation window is known. Otherwise the UI should preserve uncertainty instead of converting missing evidence into reassurance.
+
+## Stage risky capabilities
+
+A new integration does not have to expose its full write surface on day one.
+
+For higher-impact capabilities, prefer a staged rollout:
+
+1. ship the smallest read-only path;
+2. verify authentication/session persistence and real scoped discovery;
+3. add write tools in a separate change;
+4. keep destructive operations behind explicit guards;
+5. where possible, temporarily constrain writes to a dedicated test resource during live smoke testing.
+
+This makes failures easier to localize and review. It also gives tests a concrete boundary: guard validation should happen before expensive bootstrap, session creation, or upstream API calls, so a refused action provably has no side effect.
+
 ## Configuration rollout is part of reliability
 
 A correct configuration file can still cause an outage if the rollout mechanism behaves differently from what you assumed.

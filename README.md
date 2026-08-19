@@ -17,6 +17,7 @@ This repository is **not a sanitized clone** of a real deployment. It is a clean
 - human-gated patterns for agentic automation
 - resilient capability discovery for scoped tool clients
 - separation of privileged capabilities, narrow telemetry, and alerting/policy
+- staged capability expansion: test first, probe uncertain backends, ship reads before risky writes
 - a public-safe documentation pattern for infrastructure projects
 
 The runnable baseline intentionally uses one OpenAI API key to keep the first run simple. The architecture is designed so `fast`, `balanced`, and `reasoning` can later map to different providers without changing clients.
@@ -47,7 +48,7 @@ The public example intentionally leaves out production network topology, persona
 | `src/auto_router.py` | Task-aware `auto` routing callback |
 | `mcp/spend/` | Small read-only MCP example |
 | `tests/` | Unit/config tests for routing, safety assumptions, and MCP helpers |
-| `docs/build-log/` | Staged engineering story, including reliability, budget, automation, and capability guardrails |
+| `docs/build-log/` | Staged engineering story, including reliability, budget, automation, capability discovery, and safe expansion |
 | `docs/security-boundary.md` | What belongs in the public twin and what never does |
 | `scripts/public-safety-check.sh` | Pre-publication leak checks |
 
@@ -125,10 +126,11 @@ The later build notes extend the control-plane idea beyond routing:
 - `docs/build-log/07-budget-guardrails.md` describes per-client credentials, soft/hard budget boundaries, early detection of loops, spend velocity, sustained fan-out, and observable enforcement.
 - `docs/build-log/08-agent-automation.md` describes human-gated coding-agent workflows with anti-recursion, exact approvals, idempotent state transitions, correct ref targeting, and hard execution limits.
 - `docs/build-log/09-capability-discovery.md` describes permission-filtered tool catalogs, startup races, last-known-good caching, periodic refresh, capability-specific health signals, and transport ownership.
+- `docs/build-log/10-capability-expansion.md` describes how to expand a mature control plane safely: add regression coverage first, probe uncertain backends before coding, split reads from writes, constrain live write testing, pin risky third-party behavior, and verify time/context semantics.
 
-The reliability and hardening chapters also cover a general integration pattern: keep privileged tool execution separate from narrow telemetry and policy/alerting, and treat stale metrics or exported operational snapshots as first-class failure/privacy risks.
+The reliability and hardening chapters also cover a general integration pattern: keep privileged tool execution separate from narrow telemetry and policy/alerting; distinguish zero/no-data/unknown; treat stale metrics as failure; and treat previously committed secrets as exposed even after HEAD is cleaned.
 
-These chapters are intentionally architecture-first. They do not publish production thresholds, client identities, repository allowlists, notification channels, tool inventories, operational snapshots, or endpoints.
+These chapters are intentionally architecture-first. They do not publish production thresholds, client identities, repository allowlists, notification channels, tool inventories, operational snapshots, services, accounts, or endpoints.
 
 ## Validate before publishing
 
@@ -157,11 +159,12 @@ The repository is organized so the implementation can be explained as a sequence
 2. **Spend** — add persistent usage/cost data.
 3. **Routing** — create capability aliases, fallbacks, and an `auto` tier.
 4. **Tools** — expose safe read-only operational data over MCP.
-5. **Reliability** — health checks, freshness, independent telemetry, rollout blast radius, graceful fallbacks, and failure visibility.
-6. **Hardening** — least privilege, confirmation gates for writes, secret/artifact hygiene, and public/private separation.
+5. **Reliability** — health checks, freshness, unknown-state handling, staged capabilities, rollout blast radius, graceful fallbacks, and failure visibility.
+6. **Hardening** — least privilege, confirmation gates for writes, secret-history handling, artifact hygiene, and public/private separation.
 7. **Budget guardrails** — isolate client spend, alert early, and contain runaway workloads before the account-level blast radius grows.
 8. **Agent automation** — automate review/fix loops while bounding recursion, authorization, retries, spend, and side effects.
 9. **Capability discovery** — treat the permission-filtered tool catalog as dynamic distributed state that must refresh and self-heal.
+10. **Capability expansion** — test before growing surface area, probe before choosing a backend, ship one slice at a time, stage reads before risky writes, and verify semantics in production.
 
 See `docs/build-log/` for the staged notes.
 
