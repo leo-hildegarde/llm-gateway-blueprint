@@ -1,8 +1,11 @@
 flowchart LR
-    A[CLI / App / Bot] -->|OpenAI-compatible request| B[LLM Gateway]
-    B --> C[(Postgres: usage + spend)]
-    B --> D[Fast provider route]
-    B --> E[Balanced provider route]
-    B --> F[Reasoning provider route]
-    B --> G[Read-only MCP services]
-    H[Metrics / Admin UI] --> B
+    C[Clients] -->|OpenAI-compatible API| G[LLM Gateway]
+    G --> DB[(Postgres: usage + spend)]
+    G --> F[Fast provider route]
+    G --> B[Balanced provider route]
+    G --> R[Reasoning provider route]
+    G --> M[Read-only MCP services]
+    H[Metrics / Admin UI] --> G
+
+    N[Native coding/runtime client] -->|Provider-native model access| P[Model Provider]
+    N -->|MCP / tools| G
