@@ -6,8 +6,8 @@ This repository is **not a sanitized clone** of a real deployment. It is a clean
 
 ## What this demonstrates
 
-- one OpenAI-compatible gateway in front of model providers
-- Postgres-backed usage and spend tracking
+- one OpenAI-compatible gateway for centralized model and tool integrations
+- Postgres-backed usage and spend tracking for traffic that passes through the gateway
 - stable capability aliases instead of provider-specific model names
 - fallback chains
 - task-aware `auto` routing
@@ -18,6 +18,7 @@ This repository is **not a sanitized clone** of a real deployment. It is a clean
 - resilient capability discovery for scoped tool clients
 - separation of privileged capabilities, narrow telemetry, and alerting/policy
 - staged capability expansion: test first, probe uncertain backends, ship reads before risky writes
+- deliberate separation of model access from tool/service access
 - a public-safe documentation pattern for infrastructure projects
 
 The runnable baseline intentionally uses one OpenAI API key to keep the first run simple. The architecture is designed so `fast`, `balanced`, and `reasoning` can later map to different providers without changing clients.
@@ -35,9 +36,14 @@ flowchart LR
     F --> P[Provider API]
     B --> P
     R --> P
+
+    N[Native coding/runtime client] -->|Provider-native model access| Q[Model Provider]
+    N -->|MCP / tools| G
 ```
 
 The public example intentionally leaves out production network topology, personal integrations, hostnames, private addresses, account identifiers, backup destinations, and operational secrets.
+
+The gateway is a controlled integration layer, not necessarily a mandatory inference proxy for every client. Model access and tool/service access can be separated when that produces clearer credential boundaries, simpler failure semantics, or less coupling.
 
 ## Repository tour
 
@@ -48,7 +54,7 @@ The public example intentionally leaves out production network topology, persona
 | `src/auto_router.py` | Task-aware `auto` routing callback |
 | `mcp/spend/` | Small read-only MCP example |
 | `tests/` | Unit/config tests for routing, safety assumptions, and MCP helpers |
-| `docs/build-log/` | Staged engineering story, including reliability, budget, automation, capability discovery, and safe expansion |
+| `docs/build-log/` | Staged engineering story, including reliability, budget, automation, capability discovery, safe expansion, and architecture evolution |
 | `docs/security-boundary.md` | What belongs in the public twin and what never does |
 | `scripts/public-safety-check.sh` | Pre-publication leak checks |
 
@@ -119,6 +125,24 @@ It deliberately does **not** return prompts, responses, API keys, raw request me
 
 For tutorial simplicity it uses the same Postgres credential as LiteLLM. A production deployment should create a separate database role with only the `SELECT` privileges the tool requires.
 
+Spend visibility is intentionally scoped to traffic that actually passes through the gateway. It is not presented as a universal accounting layer for all LLM usage, because clients may use provider-native model/runtime paths outside the gateway.
+
+## Separating model access from tool access
+
+The blueprint originally treated the gateway as the primary path for both model inference and tool/service access. The architecture has evolved toward a deliberate separation of those concerns.
+
+A client may use a provider-native runtime for model access while still using the gateway as the controlled integration layer for MCP tools and services. This can provide:
+
+- clearer credential boundaries;
+- deterministic provider behavior and failure semantics;
+- less coupling between subscriptions, provider limits, and tool access;
+- a smaller gateway responsibility surface;
+- better isolation of centralized routing, policy, observability, and service integrations.
+
+The important principle is not that every client should bypass the gateway. It is that a gateway should centralize the concerns that benefit from centralization; it does not need to proxy every request simply because it can.
+
+See `docs/build-log/11-architecture-evolution.md` for the engineering narrative.
+
 ## Cost, automation, and capability guardrails
 
 The later build notes extend the control-plane idea beyond routing:
@@ -165,6 +189,7 @@ The repository is organized so the implementation can be explained as a sequence
 8. **Agent automation** — automate review/fix loops while bounding recursion, authorization, retries, spend, and side effects.
 9. **Capability discovery** — treat the permission-filtered tool catalog as dynamic distributed state that must refresh and self-heal.
 10. **Capability expansion** — test before growing surface area, probe before choosing a backend, ship one slice at a time, stage reads before risky writes, and verify semantics in production.
+11. **Architecture evolution** — separate model access from tool/service access when the gateway no longer needs to be the inference path for every client.
 
 See `docs/build-log/` for the staged notes.
 
