@@ -14,7 +14,7 @@ check() {
   local pattern="$2"
   local hits
 
-  hits="$(grep -RInE --exclude-dir=.git --exclude='public-safety-check.sh' "$pattern" . 2>/dev/null || true)"
+  hits="$(grep -RInE --exclude-dir=.git --exclude-dir=.venv --exclude='public-safety-check.sh' "$pattern" . 2>/dev/null || true)"
   if [[ -n "$hits" ]]; then
     echo "[FAIL] $label"
     printf '%s\n' "$hits" | awk -F: '{print $1 ":" $2 " [redacted]"}'
