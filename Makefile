@@ -1,3 +1,8 @@
+PYTHON ?= python3
+ifneq ($(wildcard .venv/bin/python),)
+PYTHON := .venv/bin/python
+endif
+
 .PHONY: setup safety test up down logs smoke
 
 setup:
@@ -8,7 +13,7 @@ safety:
 	bash ./scripts/public-safety-check.sh
 
 test:
-	python -m pytest -q
+	$(PYTHON) -m pytest -q
 
 up:
 	docker compose up -d
